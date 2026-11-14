@@ -1,0 +1,53 @@
+name: "main"
+instances {
+  id: "player"
+  prototype: "/main/objects/player.go"
+  position {
+    x: 960.0
+    y: 140.0
+    z: 1.0
+  }
+}
+instances {
+  id: "background"
+  prototype: "/main/objects/background.go"
+  position {
+    x: -64.0
+    y: -100.0
+  }
+  scale3 {
+    z: 1.0E-6
+  }
+}
+instances {
+  id: "background_2"
+  prototype: "/main/objects/background.go"
+  position {
+    x: -64.0
+    y: 1180.0
+  }
+  scale3 {
+    z: 1.0E-6
+  }
+}
+instances {
+  id: "spawner"
+  prototype: "/main/objects/spawner.go"
+}
+instances {
+  id: "hud"
+  prototype: "/main/hud.go"
+}
+instances {
+  id: "game_manager"
+  prototype: "/main/objects/game_manager.go"
+}
+instances {
+  id: "start_screen"
+  prototype: "/main/start_screen.go"
+}
+instances {
+  id: "game_over"
+  prototype: "/main/game_over.go"
+}
+scale_along_z: 0

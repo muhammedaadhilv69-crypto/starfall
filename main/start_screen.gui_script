@@ -1,0 +1,46 @@
+function init(self)
+	print("START SCREEN INITIALIZED")
+
+	msg.post(".", "acquire_input_focus")
+end
+
+function on_input(self, action_id, action)
+	if action_id == hash("touch") and action.pressed then
+		local x = action.x
+		local y = action.y
+
+		local button = gui.get_node("play_button")
+
+		if gui.pick_node(button, x, y) then
+			print("PLAY BUTTON PRESSED")
+			msg.post(".", "release_input_focus")
+
+			msg.post("/game_manager#game_manager", "start_game")
+		end
+	end
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("hide_menu") then
+		gui.set_enabled(gui.get_node("menu_background"), false)
+		gui.set_enabled(gui.get_node("title_text"), false)
+		gui.set_enabled(gui.get_node("play_button"), false)
+		gui.set_enabled(gui.get_node("play_text"), false)
+		gui.set_enabled(gui.get_node("menu_high_score"), false)
+
+		print("MENU HIDDEN")
+	elseif message_id == hash("update_high_score") then
+		gui.set_text(
+			gui.get_node("menu_high_score"),
+			"BEST: " .. tostring(message.high_score)
+		)
+	elseif message_id == hash("show_menu") then
+		gui.set_enabled(gui.get_node("menu_background"), true)
+		gui.set_enabled(gui.get_node("title_text"), true)
+		gui.set_enabled(gui.get_node("play_button"), true)
+		gui.set_enabled(gui.get_node("play_text"), true)
+		gui.set_enabled(gui.get_node("menu_high_score"), true)
+
+		print("MENU SHOWN")
+	end
+end

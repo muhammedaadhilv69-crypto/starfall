@@ -1,0 +1,120 @@
+local function update_health_bar(self)
+	if not self.health_fill_id then return end
+
+	local health_ratio = math.max(
+		0,
+		self.health / self.max_health
+	)
+
+	-- Scale the separate Game Object
+	go.set_scale(
+		vmath.vector3(health_ratio, 1, 1),
+		self.health_fill_id
+	)
+
+	-- Move it to preserve its left edge
+	go.set_position(
+		vmath.vector3(
+			-32 + (32 * health_ratio),
+			80,
+			0
+		),
+		self.health_fill_id
+	)
+end
+
+function init(self)
+	print("ENEMY SCRIPT INIT")
+
+	self.speed = math.ceil(math.random(200, 400))
+
+	self.shoot_interval = 2.5
+	self.shoot_timer = 1
+
+	self.max_health = math.ceil(math.random(5, 15))
+	self.health = self.max_health
+
+	self.health_fill_id = factory.create(
+		"#health_fill_factory",
+		go.get_position(),
+		go.get_rotation()
+	)
+
+	go.set_parent(
+		self.health_fill_id,
+		go.get_id(),
+		true
+	)
+
+	self.health_bar_ready = false
+
+	msg.post("/game_manager#game_manager", "register_object", {
+		object_id = go.get_id()
+	})
+end
+
+local function shoot(self)
+	local enemy_position = go.get_position()
+
+	local spawn_position = enemy_position + vmath.vector3(0, -35, 0)
+
+	factory.create(
+		"#enemy_bullet_factory",
+		spawn_position,
+		vmath.quat()
+	)
+end
+
+function update(self, dt)
+	if not self.health_bar_ready then
+		update_health_bar(self)
+		self.health_bar_ready = true
+	end
+	local position = go.get_position()
+
+	position.y = position.y - self.speed * dt
+
+	go.set_position(position)
+
+	self.shoot_timer = self.shoot_timer - dt
+
+	if self.shoot_timer <= 0 then
+		shoot(self)
+		self.shoot_timer = self.shoot_interval
+	end
+
+	-- Remove enemies that leave the screen
+	if position.y < -100 then
+		go.delete()
+	end
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("trigger_response") then
+		if message.other_group == hash("bullets") and message.enter then
+			self.health = math.max(0, self.health - math.ceil(math.random(1, 2.5)))
+
+			print("ENEMY HEALTH:", self.health)
+
+			if self.health <= 0 then
+				print("ENEMY DESTROYED")
+				msg.post("/spawner#spawner", "enemy_destroyed")
+				go.delete()
+				return
+			end
+
+			if self.health_bar_ready then
+				update_health_bar(self)
+			end
+		end
+	elseif message_id == hash("set_enemy_speed") then
+		self.speed = message.speed
+		print("ENEMY SPEED SET:", self.speed)
+	end
+end
+
+function final(self)
+	msg.post("/game_manager#game_manager", "unregister_object", {
+		object_id = go.get_id()
+	})
+end

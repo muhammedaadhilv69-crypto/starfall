@@ -1,0 +1,206 @@
+local GAME_STATE = {
+	MENU = hash("menu"),
+	PLAYING = hash("playing"),
+	GAME_OVER = hash("game_over")
+}
+
+local DIFFICULTY_TIERS = {
+	{
+		time = 0,
+		name = "EASY",
+		enemy_speed = 180,
+		spawn_interval = 2.0,
+		spawn_amount = 1
+	},
+	{
+		time = 30,
+		name = "NORMAL",
+		enemy_speed = 210,
+		spawn_interval = 1.7,
+		spawn_amount = 2
+	},
+	{
+		time = 60,
+		name = "HARD",
+		enemy_speed = 240,
+		spawn_interval = 1.4,
+		spawn_amount = 3
+	},
+	{
+		time = 90,
+		name = "EXPERT",
+		enemy_speed = 270,
+		spawn_interval = 1.2,
+		spawn_amount = 5
+	},
+	{
+		time = 120,
+		name = "EXTREME",
+		enemy_speed = 300,
+		spawn_interval = 1.0,
+		spawn_amount = 10
+	}
+}
+
+local function clear_spawned_objects(self)
+	local objects = self.spawned_objects
+	self.spawned_objects = {}
+
+	for _, object_id in ipairs(objects) do
+		go.delete(object_id)
+	end
+
+	print("SPAWNED OBJECTS CLEARED:", #objects)
+end
+
+local function reset_difficulty(self)
+	self.elapsed_time = 0
+	self.difficulty_level = 1
+
+	print("DIFFICULTY RESET: EASY")
+
+	local tier = DIFFICULTY_TIERS[1]
+
+	msg.post("/spawner#spawner", "set_difficulty", {
+		spawn_interval = tier.spawn_interval,
+		enemy_speed = tier.enemy_speed,
+		difficulty_name = tier.name,
+		spawn_amount = tier.spawn_amount
+	})
+end
+
+local function update_difficulty(self)
+	local new_level = 1
+
+	for i, tier in ipairs(DIFFICULTY_TIERS) do
+		if self.elapsed_time >= tier.time then
+			new_level = i
+		end
+	end
+
+	if new_level ~= self.difficulty_level then
+		self.difficulty_level = new_level
+		local tier = DIFFICULTY_TIERS[new_level]
+
+		msg.post("/spawner#spawner", "set_difficulty", {
+			spawn_interval = tier.spawn_interval,
+			enemy_speed = tier.enemy_speed,
+			difficulty_name = tier.name,
+			spawn_amount = tier.spawn_amount
+		})
+
+		print("DIFFICULTY:", tier.name)
+		print("ENEMY SPEED:", tier.enemy_speed)
+		print("SPAWN INTERVAL:", tier.spawn_interval)
+	end
+end
+
+function init(self)
+	self.state = GAME_STATE.MENU
+
+	print("GAME MANAGER INITIALIZED")
+	print("STATE: MENU")
+
+	self.score = 0
+	self.high_score = 0
+
+	self.spawned_objects = {}
+
+	self.elapsed_time = 0
+	self.difficulty_level = 1
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("start_game") then
+		self.state = GAME_STATE.PLAYING
+		reset_difficulty(self)
+
+		msg.post("/start_screen#start_screen", "hide_menu")
+		msg.post("/hud#hud", "show_hud")
+		msg.post("/spawner#spawner", "start_spawning")
+		msg.post("/player#player", "start_game")
+
+		print("STATE: PLAYING")
+	elseif message_id == hash("game_over") then
+		self.state = GAME_STATE.GAME_OVER
+
+		msg.post("/spawner#spawner", "stop_spawning")
+		msg.post("/player#player", "game_over")
+		msg.post("/game_over#game_over", "show_game_over", {
+			score = self.score,
+			high_score = self.high_score
+		})
+
+		msg.post("/hud#hud", "hide_hud")
+		msg.post("/start_screen#start_screen", "hide_menu")
+
+		print("STATE: GAME OVER")
+	elseif message_id == hash("return_to_menu") then
+		self.state = GAME_STATE.MENU
+		reset_difficulty(self)
+
+		-- Stop gameplay
+		msg.post("/spawner#spawner", "stop_spawning")
+		msg.post("/player#player", "game_over")
+
+		-- Clear remaining spawned objects
+		msg.post("/game_manager#game_manager", "clear_spawned_objects")
+
+		-- Reset current run
+		msg.post("/spawner#spawner", "reset_spawner")
+
+		-- Update the player for the next game
+		msg.post("/player#player", "reset_player")
+
+		-- Update UI
+		msg.post("/game_over#game_over", "hide_game_over")
+		msg.post("/hud#hud", "hide_hud")
+		msg.post("/start_screen#start_screen", "show_menu")
+
+		print("STATE: MENU")
+	elseif message_id == hash("update_score") then
+		self.score = message.score
+		self.high_score = message.high_score
+	elseif message_id == hash("register_object") then
+		table.insert(self.spawned_objects, message.object_id)
+	elseif message_id == hash("unregister_object") then
+		for i, object_id in ipairs(self.spawned_objects) do
+			if object_id == message.object_id then
+				table.remove(self.spawned_objects, i)
+				break
+			end
+		end
+	elseif message_id == hash("clear_spawned_objects") then
+		clear_spawned_objects(self)
+	elseif message_id == hash("restart_game") then
+		self.state = GAME_STATE.PLAYING
+		reset_difficulty(self)
+
+		-- Remove objects left from the previous round
+		msg.post("/game_manager#game_manager", "clear_spawned_objects")
+
+		-- Reset gameplay systems
+		msg.post("/spawner#spawner", "reset_spawner")
+		msg.post("/player#player", "reset_player")
+
+		-- Restore the gameplay UI
+		msg.post("/game_over#game_over", "hide_game_over")
+		msg.post("/hud#hud", "show_hud")
+
+		-- Start the new round
+		msg.post("/spawner#spawner", "start_spawning")
+		msg.post("/player#player", "start_game")
+
+		print("STATE: PLAYING (RESTARTED)")
+	end
+end
+
+function update(self, dt)
+	if self.state ~= GAME_STATE.PLAYING then
+		return
+	end
+
+	self.elapsed_time = self.elapsed_time + dt
+
+	update_difficulty(self)
+end

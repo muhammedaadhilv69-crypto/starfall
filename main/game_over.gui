@@ -1,0 +1,147 @@
+script: "/main/game_over.gui_script"
+fonts {
+  name: "game_font"
+  font: "/main/assets/fonts/game_font.font"
+}
+nodes {
+  position {
+    x: 959.0
+    y: 540.0
+  }
+  size {
+    x: 1920.0
+    y: 1080.0
+  }
+  color {
+    x: 0.101960786
+    y: 0.101960786
+    z: 0.101960786
+  }
+  type: TYPE_BOX
+  id: "game_over_background"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: 960.0
+    y: 700.0
+  }
+  scale {
+    x: 4.794872
+    y: 4.44152
+  }
+  size {
+    x: 400.0
+    y: 90.0
+  }
+  color {
+    y: 0.5019608
+    z: 0.5019608
+  }
+  type: TYPE_TEXT
+  text: "GAME OVER"
+  font: "game_font"
+  id: "game_over_title"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: 960.0
+    y: 590.0
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  type: TYPE_TEXT
+  text: "SCORE: 0"
+  font: "game_font"
+  id: "final_score_text"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: 960.0
+    y: 530.0
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  type: TYPE_TEXT
+  text: "BEST: 0"
+  font: "game_font"
+  id: "best_score_text"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: 960.0
+    y: 410.0
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  color {
+    x: 0.6
+    y: 0.2
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "restart_button"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: 960.0
+    y: 410.0
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  type: TYPE_TEXT
+  text: "RESTART"
+  font: "game_font"
+  id: "restart_text"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: 960.0
+    y: 290.0
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  color {
+    x: 0.101960786
+    y: 0.3019608
+    z: 0.101960786
+  }
+  type: TYPE_BOX
+  id: "menu_button"
+  inherit_alpha: true
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: 960.0
+    y: 290.0
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  type: TYPE_TEXT
+  text: "MENU"
+  font: "game_font"
+  id: "menu_text"
+  inherit_alpha: true
+}
+material: "/builtins/materials/gui.material"
+adjust_reference: ADJUST_REFERENCE_PARENT

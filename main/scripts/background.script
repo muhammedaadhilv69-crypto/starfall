@@ -1,0 +1,18 @@
+function init(self)
+	self.speed = 120
+	self.height = 1280
+end
+
+function update(self, dt)
+	local position = go.get_position()
+
+	-- Move downward
+	position.y = position.y - self.speed * dt
+
+	-- Recycle only when completely below the screen
+	if position.y <= -self.height then
+		position.y = position.y + self.height * 2
+	end
+
+	go.set_position(position)
+end

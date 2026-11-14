@@ -1,0 +1,22 @@
+images {
+  image: "/main/assets/players/playerShip1_red.png"
+}
+images {
+  image: "/main/assets/enemies/enemyBlack2.png"
+}
+images {
+  image: "/main/assets/lasers/laserBlue01.png"
+}
+images {
+  image: "/main/assets/lasers/laserBlue08.png"
+}
+images {
+  image: "/main/assets/lasers/laserRed16.png"
+}
+images {
+  image: "/main/assets/ui/health_bar_bg.png"
+}
+images {
+  image: "/main/assets/ui/health_bar.png"
+}
+extrude_borders: 2

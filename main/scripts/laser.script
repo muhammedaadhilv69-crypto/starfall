@@ -1,0 +1,32 @@
+function init(self)
+	self.speed = math.ceil(math.random(750, 1000))
+
+	msg.post("/game_manager#game_manager", "register_object", {
+		object_id = go.get_id()
+	})
+end
+
+function update(self, dt)
+	local position = go.get_position()
+
+	position.y = position.y + self.speed * dt
+	go.set_position(position)
+
+	if position.y > 1200 then
+		go.delete()
+	end
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("trigger_response") then
+		if message.other_group == hash("enemies") then
+			go.delete()
+		end
+	end
+end
+
+function final(self)
+	msg.post("/game_manager#game_manager", "unregister_object", {
+		object_id = go.get_id()
+	})
+end

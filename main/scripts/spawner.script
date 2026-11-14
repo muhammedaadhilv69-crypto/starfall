@@ -1,0 +1,167 @@
+local SAVE_PATH = sys.get_save_file("starfall", "save_data")
+
+local function load_high_score()
+	local ok, data = pcall(sys.load, SAVE_PATH)
+
+	if not ok then
+		print("FAILED TO LOAD SAVE:", data)
+		return 0
+	end
+
+	return tonumber(type(data) == "table" and data.high_score) or 0
+end
+
+local function save_high_score(score)
+	local ok, result = pcall(sys.save, SAVE_PATH, {
+		high_score = score
+	})
+
+	if not ok or not result then
+		print("FAILED TO SAVE HIGH SCORE:", result)
+	else
+		print("HIGH SCORE SAVED:", score)
+	end
+end
+
+function init(self)
+	print("SPAWNER INITIALIZED")
+
+	self.is_spawning = false
+
+	self.spawn_interval = 2
+	self.enemy_speed = math.ceil(math.random(200, 400))
+	self.difficulty_name = "EASY"
+	self.spawn_timer = 0
+	self.spawn_count = 0
+
+	self.spawn_amount = 1
+
+	self.score = 0
+	self.points_per_enemy = math.ceil(math.random(10, 25))
+	self.high_score = load_high_score()
+
+	msg.post("/hud#hud", "update_score", {
+		score = self.score
+	})
+
+	msg.post("/hud#hud", "update_high_score", {
+		high_score = self.high_score
+	})
+
+	msg.post("/game_manager#game_manager", "update_score", {
+		score = self.score,
+		high_score = self.high_score
+	})
+
+	msg.post("/start_screen#start_screen", "update_high_score", {
+		high_score = self.high_score
+	})
+
+	print("LOADED HIGH SCORE:", self.high_score)
+end
+
+function update(self, dt)
+	if not self.is_spawning then
+		return
+	end
+
+	self.spawn_timer = self.spawn_timer - dt
+
+	if self.spawn_timer <= 0 then
+		for i = 1, self.spawn_amount do
+			local x = math.random(64, 1856)
+			local spawn_position = vmath.vector3(x, 1150, 1)
+
+			local enemy_id = factory.create(
+				"#enemy_factory",
+				spawn_position,
+				vmath.quat()
+			)
+			if not enemy_id then
+				print("FAILED TO SPAWN ENEMY")
+			else
+				msg.post(enemy_id, "set_enemy_speed", {
+					speed = self.enemy_speed
+				})
+
+				self.spawn_count = self.spawn_count + 1
+				print("ENEMY SPAWNED:", self.spawn_count, enemy_id)
+			end
+
+			-- msg.post(enemy_id, "set_enemy_speed", {
+			-- speed = self.enemy_speed
+			-- })
+			--
+			-- self.spawn_count = self.spawn_count + 1
+			--
+			-- print("ENEMY SPAWNED:", self.spawn_count, enemy_id)
+		end
+
+		self.spawn_timer = self.spawn_interval
+	end
+end
+
+local function reset_spawner(self)
+	self.is_spawning = false
+	self.spawn_timer = 0
+	self.spawn_count = 0
+	self.score = 0
+	self.spawn_interval = 2
+	self.enemy_speed = 180
+	self.difficulty_name = "EASY"
+	self.spawn_amount = 1
+
+	msg.post("/hud#hud", "update_score", {
+		score = self.score
+	})
+
+	msg.post("/game_manager#game_manager", "update_score", {
+		score = self.score,
+		high_score = self.high_score
+	})
+
+	print("SPAWNER RESET")
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("enemy_destroyed") then
+		self.score = self.score + self.points_per_enemy
+
+		print("SCORE:", self.score)
+
+		msg.post("/hud#hud", "update_score", {
+			score = self.score
+		})
+
+		if self.score > self.high_score then
+			self.high_score = self.score
+
+			print("NEW HIGH SCORE:", self.high_score)
+
+			save_high_score(self.high_score)
+
+			msg.post("/hud#hud", "update_high_score", {
+				high_score = self.high_score
+			})
+		end
+		msg.post("/game_manager#game_manager", "update_score", {
+			score = self.score,
+			high_score = self.high_score
+		})
+	elseif message_id == hash("start_spawning") then
+		self.is_spawning = true
+		print("SPAWNING STARTED")
+	elseif message_id == hash("stop_spawning") then
+		self.is_spawning = false
+		print("SPAWNING STOPPED")
+	elseif message_id == hash("reset_spawner") then
+		reset_spawner(self)
+	elseif message_id == hash("set_difficulty") then
+		self.spawn_interval = message.spawn_interval
+		self.enemy_speed = message.enemy_speed
+		self.difficulty_name = message.difficulty_name
+		self.spawn_amount = message.spawn_amount or 1
+
+		print("SPAWNER DIFFICULTY:", self.difficulty_name)
+	end
+end

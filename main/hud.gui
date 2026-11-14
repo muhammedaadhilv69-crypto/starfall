@@ -1,0 +1,92 @@
+script: "/main/hud.gui_script"
+fonts {
+  name: "game_font"
+  font: "/main/assets/fonts/game_font.font"
+}
+nodes {
+  position {
+    x: 120.0
+    y: 675.0
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  type: TYPE_TEXT
+  text: "HEALTH: 100"
+  font: "game_font"
+  id: "health_text"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: 120.0
+    y: 700.0
+  }
+  size {
+    x: 200.0
+    y: 18.0
+  }
+  color {
+    x: 0.0
+    y: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "health_bg"
+  inherit_alpha: true
+  alpha: 0.8
+  size_mode: SIZE_MODE_AUTO
+}
+nodes {
+  position {
+    x: 20.0
+    y: 700.0
+  }
+  size {
+    x: 200.0
+    y: 18.0
+  }
+  color {
+    x: 0.0
+    z: 0.0
+  }
+  type: TYPE_BOX
+  id: "health_fill"
+  pivot: PIVOT_W
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: 120.0
+    y: 640.0
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  type: TYPE_TEXT
+  text: "SCORE: 0"
+  font: "game_font"
+  id: "score_text"
+  inherit_alpha: true
+}
+nodes {
+  position {
+    x: 120.0
+    y: 605.0
+  }
+  size {
+    x: 200.0
+    y: 100.0
+  }
+  type: TYPE_TEXT
+  text: "BEST: "
+  font: "game_font"
+  id: "high_score_text"
+  inherit_alpha: true
+}
+material: "/builtins/materials/gui.material"
+adjust_reference: ADJUST_REFERENCE_DISABLED
+max_nodes: 100
+max_dynamic_textures: 100

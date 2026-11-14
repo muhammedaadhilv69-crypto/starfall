@@ -1,0 +1,66 @@
+function init(self)
+	print("GAME OVER SCREEN INITIALIZED")
+
+	gui.set_enabled(gui.get_node("game_over_background"), false)
+	gui.set_enabled(gui.get_node("game_over_title"), false)
+	gui.set_enabled(gui.get_node("final_score_text"), false)
+	gui.set_enabled(gui.get_node("best_score_text"), false)
+	gui.set_enabled(gui.get_node("restart_button"), false)
+	gui.set_enabled(gui.get_node("restart_text"), false)
+	gui.set_enabled(gui.get_node("menu_button"), false)
+	gui.set_enabled(gui.get_node("menu_text"), false)
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("show_game_over") then
+		msg.post(".", "acquire_input_focus")
+
+		gui.set_enabled(gui.get_node("game_over_background"), true)
+		gui.set_enabled(gui.get_node("game_over_title"), true)
+		gui.set_enabled(gui.get_node("final_score_text"), true)
+		gui.set_enabled(gui.get_node("best_score_text"), true)
+		gui.set_enabled(gui.get_node("restart_button"), true)
+		gui.set_enabled(gui.get_node("restart_text"), true)
+		gui.set_enabled(gui.get_node("menu_button"), true)
+		gui.set_enabled(gui.get_node("menu_text"), true)
+
+		gui.set_text(
+			gui.get_node("final_score_text"),
+			"SCORE: " .. tostring(message.score)
+		)
+
+		gui.set_text(
+			gui.get_node("best_score_text"),
+			"BEST: " .. tostring(message.high_score)
+		)
+
+		print("GAME OVER SCREEN SHOWN")
+	elseif message_id == hash("hide_game_over") then
+		msg.post(".", "release_input_focus")
+
+		gui.set_enabled(gui.get_node("game_over_background"), false)
+		gui.set_enabled(gui.get_node("game_over_title"), false)
+		gui.set_enabled(gui.get_node("final_score_text"), false)
+		gui.set_enabled(gui.get_node("best_score_text"), false)
+		gui.set_enabled(gui.get_node("restart_button"), false)
+		gui.set_enabled(gui.get_node("restart_text"), false)
+		gui.set_enabled(gui.get_node("menu_button"), false)
+		gui.set_enabled(gui.get_node("menu_text"), false)
+
+		print("GAME OVER SCREEN HIDDEN")
+	end
+end
+
+function on_input(self, action_id, action)
+	if action_id == hash("touch") and action.pressed then
+		local restart_button = gui.get_node("restart_button")
+
+		if gui.pick_node(restart_button, action.x, action.y) then
+			print("RESTART BUTTON PRESSED")
+			msg.post("/game_manager#game_manager", "restart_game")
+		elseif gui.pick_node(gui.get_node("menu_button"), action.x, action.y) then
+			print("MENU BUTTON PRESSED")
+			msg.post("/game_manager#game_manager", "return_to_menu")
+		end
+	end
+end
